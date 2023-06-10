@@ -1,0 +1,28 @@
+public class Main {
+     public class TableroVertical {
+    public static void main(String[] args) {
+        int filas = 10;
+        int columnas = 100;
+
+        // Crear el tablero
+        char[][] tablero = new char[filas][columnas];
+
+        // Rellenar el tablero con caracteres
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                tablero[fila][columna] = '-';
+            }
+        }
+
+        // Imprimir el tablero
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                System.out.print(tablero[fila][columna]);
+            }
+            System.out.println();
+        }
+    }
+}
+
+
+}
