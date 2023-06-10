@@ -1,0 +1,14 @@
+public boolean login(String username, String password) {
+    // Check if the username and password are valid.
+    if (!users.containsKey(username) || !users.get(username).equals(password)) {
+      return false;
+    }
+  
+    // Set the user's session ID.
+    sessionId = UUID.randomUUID().toString();
+    sessions.put(sessionId, username);
+  
+    // Return true to indicate that the login was successful.
+    return true;
+  }
+  
