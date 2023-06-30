@@ -1,0 +1,18 @@
+package core;
+public class SessionManager {
+  
+  private static core.SessionManager instance;
+  
+  private java.util.Map<java.lang.String,java.lang.String> userCredentials;
+  
+  private SessionManager() {
+  }
+  
+  public static core.SessionManager getInstance() {
+    return null;
+  }
+  
+  public boolean verifyCredentials(java.lang.String username, java.lang.String password) {
+    return false;
+  }
+}
