@@ -1,0 +1,163 @@
+package core;
+import javafx.application.Application;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+/**
+ * Clase principal que representa el juego "Escape del topo".
+ */
+public class EscapeDelTopo extends Application {
+
+    // Variables de la interfaz de usuario
+    private TextField nameField;
+    private PasswordField passwordField;
+    private CheckBox rememberMeCheckbox;
+
+    /**
+     * Método de inicio de la aplicación JavaFX.
+     */
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("Escape del Topo");
+
+        // Interfaz del menú principal
+        VBox mainMenuBox = createMainMenuInterface(primaryStage);
+        Scene mainMenuScene = new Scene(mainMenuBox, 400, 300);
+
+        primaryStage.setScene(mainMenuScene);
+        primaryStage.show();
+    }
+
+    /**
+     * Crea la interfaz del menú principal.
+     */
+    private VBox createMainMenuInterface(Stage primaryStage) {
+        VBox mainMenuBox = new VBox(10);
+        mainMenuBox.setAlignment(Pos.CENTER);
+
+        Button loginButton = new Button("Ingresar");
+        loginButton.setOnAction(event -> {
+            // Acción cuando se hace clic en el botón "Ingresar"
+            // Aquí puedes abrir la interfaz de inicio de sesión
+            VBox loginBox = createLoginInterface(primaryStage);
+            Scene loginScene = new Scene(loginBox, 400, 300);
+            primaryStage.setScene(loginScene);
+        });
+
+        Button registerButton = new Button("Registrarse");
+        registerButton.setOnAction(event -> {
+            // Acción cuando se hace clic en el botón "Registrarse"
+            // Aquí puedes abrir la interfaz de registro
+            VBox registerBox = createRegisterInterface(primaryStage);
+            Scene registerScene = new Scene(registerBox, 400, 300);
+            primaryStage.setScene(registerScene);
+        });
+
+        mainMenuBox.getChildren().addAll(loginButton, registerButton);
+        return mainMenuBox;
+    }
+
+    /**
+     * Crea la interfaz de inicio de sesión.
+     */
+    private VBox createLoginInterface(Stage primaryStage) {
+        VBox loginBox = new VBox(10);
+        loginBox.setAlignment(Pos.CENTER);
+
+        Label titleLabel = new Label("Inicio de Sesión");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        Label nameLabel = new Label("Nombre:");
+        nameField = new TextField();
+
+        Label passwordLabel = new Label("Contraseña:");
+        passwordField = new PasswordField();
+
+        rememberMeCheckbox = new CheckBox("Recordarme");
+
+        Button loginButton = new Button("Ingresar");
+        Button registerButton = new Button("Registrarse");
+
+        loginButton.setOnAction(event -> {
+            String username = nameField.getText();
+            String password = passwordField.getText();
+
+            SessionManager sessionManager = SessionManager.getInstance();
+            if (sessionManager.verifyCredentials(username, password)) {
+                // Credenciales válidas, proceder al juego
+                // ...
+                // Aquí puedes abrir la interfaz del juego
+                VBox gameBox = createGameInterface(primaryStage);
+                Scene gameScene = new Scene(gameBox, 800, 600);
+                primaryStage.setScene(gameScene);
+            } else {
+                System.out.println("Credenciales invalidas...");
+            }
+        });
+
+        loginBox.getChildren().addAll(titleLabel, nameLabel, nameField, passwordLabel, passwordField,
+                rememberMeCheckbox, loginButton, registerButton);
+        return loginBox;
+    }
+
+    /**
+     * Crea la interfaz de registro.
+     */
+    private VBox createRegisterInterface(Stage primaryStage) {
+        VBox registerBox = new VBox(10);
+        registerBox.setAlignment(Pos.CENTER);
+
+        Label titleLabel = new Label("Registro");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        Label nameLabel = new Label("Nombre:");
+        nameField = new TextField();
+
+        Label emailLabel = new Label("Email:");
+        TextField emailField = new TextField();
+
+        Label passwordLabel = new Label("Contraseña:");
+        passwordField = new PasswordField();
+
+        Button registerButton = new Button("Registrarse");
+
+        registerButton.setOnAction(event -> {
+            // Falta evento de registro
+        });
+
+        Button backButton = new Button("Volver");
+        backButton.setOnAction(event -> {
+            // Falta evento para regresar
+            VBox mainMenuBox = createMainMenuInterface(primaryStage);
+            Scene mainMenuScene = new Scene(mainMenuBox, 400, 300);
+            primaryStage.setScene(mainMenuScene);
+        });
+
+        registerBox.getChildren().addAll(titleLabel, nameLabel, nameField, emailLabel, emailField, passwordLabel,
+                passwordField, registerButton, backButton);
+        return registerBox;
+    }
+
+    /**
+     * Crea la interfaz del juego.
+     */
+    private VBox createGameInterface(Stage primaryStage) {
+        //Falta se entregara en otro avance.
+        VBox gameBox = new VBox();
+        gameBox.setAlignment(Pos.CENTER);
+
+        // ...
+
+        return gameBox;
+    }
+
+    /**
+     * Punto de entrada del programa.
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
