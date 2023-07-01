@@ -1,0 +1,561 @@
+package core;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
+import javafx.application.Application;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+/**
+ * Clase principal que representa el juego "Escape del topo".
+ */
+public class EscapeDelTopo extends Application {
+
+    // Variables de la interfaz de usuario
+    private TextField nameField;
+    private PasswordField passwordField;
+    private CheckBox rememberMeCheckbox;
+    private ImageView playerImageView;
+    private ImageView starImageView;
+    private ImageView[] objectImageViews;
+    private Timeline objectMovementTimeline;
+    private boolean lost = false;
+
+    private final Level[] levels = createLevels();
+    private int currentLevel = 0;
+    private Label levelLabel;
+    private Label starLabel;
+    private Circle playerCircle;
+    private Circle starCircle;
+    private Circle[] objectCircles;
+
+
+    /**
+     * MÃ©todo de inicio de la aplicaciÃ³n JavaFX.
+     */
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("Escape del Topo");
+
+        // Interfaz del menÃº principal
+        VBox mainMenuBox = createMainMenuInterface(primaryStage);
+        Scene mainMenuScene = new Scene(mainMenuBox, 400, 300);
+
+        primaryStage.setScene(mainMenuScene);
+        primaryStage.show();
+    }
+
+    /**
+     * Crea la interfaz del menÃº principal.
+     */
+    private VBox createMainMenuInterface(Stage primaryStage) {
+        VBox mainMenuBox = new VBox(10);
+        mainMenuBox.setAlignment(Pos.CENTER);
+
+        Button loginButton = new Button("Ingresar");
+        loginButton.setOnAction(event -> {
+            VBox loginBox = createLoginInterface(primaryStage);
+            Scene loginScene = new Scene(loginBox, 400, 300);
+            primaryStage.setScene(loginScene);
+        });
+
+        Button registerButton = new Button("Registrarse");
+        registerButton.setOnAction(event -> {
+            VBox registerBox = createRegisterInterface(primaryStage);
+            Scene registerScene = new Scene(registerBox, 400, 300);
+            primaryStage.setScene(registerScene);
+        });
+
+        mainMenuBox.getChildren().addAll(loginButton, registerButton);
+        return mainMenuBox;
+    }
+
+    /**
+     * Crea la interfaz de inicio de sesiÃ³n.
+     */
+    private VBox createLoginInterface(Stage primaryStage) {
+        VBox loginBox = new VBox(10);
+        loginBox.setAlignment(Pos.CENTER);
+
+        Label titleLabel = new Label("Inicio de SesiÃ³n");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        Label nameLabel = new Label("Nombre:");
+        nameField = new TextField();
+
+        Label passwordLabel = new Label("ContraseÃ±a:");
+        passwordField = new PasswordField();
+
+        rememberMeCheckbox = new CheckBox("Recordarme");
+
+        Button loginButton = new Button("Ingresar");
+        Button registerButton = new Button("Registrarse");
+
+        loginButton.setOnAction(event -> {
+            String nombre = nameField.getText();
+            String contraseÃ±a = passwordField.getText();
+
+            boolean usuarioEncontrado = false;
+
+            try {
+                File archivo = new File("registro.csv");
+                Scanner scanner = new Scanner(archivo);
+
+                while (scanner.hasNextLine()) {
+                    String linea = scanner.nextLine();
+                    String[] datos = linea.split(",");
+
+                    if (datos.length >= 2 && datos[0].equals(nombre) && datos[2].equals(contraseÃ±a)) {
+                        usuarioEncontrado = true;
+                        break;
+                    }
+                }
+
+                scanner.close();
+
+                if (usuarioEncontrado) {
+                    System.out.println("Â¡Bienvenido!");
+                    // Puedes agregar aquÃ­ cÃ³digo adicional para llevar al usuario a la pantalla de juegoNivel1
+                    VBox juegoNivel1Box = createJuegoNivel1Interface(primaryStage);
+                    Scene juegoNivel1Scene = new Scene(juegoNivel1Box, 400, 300);
+                    primaryStage.setScene(juegoNivel1Scene);
+                } else {
+                    System.out.println("Usuario no encontrado");
+                }
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        });
+
+        registerButton.setOnAction(event -> {
+            VBox registerBox = createRegisterInterface(primaryStage);
+            Scene registerScene = new Scene(registerBox, 400, 300);
+            primaryStage.setScene(registerScene);
+        });
+
+        loginBox.getChildren().addAll(titleLabel, nameLabel, nameField, passwordLabel, passwordField,
+                rememberMeCheckbox, loginButton, registerButton);
+        return loginBox;
+    }
+
+    /**
+     * Crea la interfaz de registro.
+     */
+    private VBox createRegisterInterface(Stage primaryStage) {
+        VBox registerBox = new VBox(10);
+        registerBox.setAlignment(Pos.CENTER);
+
+        Label titleLabel = new Label("Registro");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        Label nameLabel = new Label("Nombre:");
+        nameField = new TextField();
+
+        Label emailLabel = new Label("Email:");
+        TextField emailField = new TextField();
+
+        Label passwordLabel = new Label("ContraseÃ±a:");
+        passwordField = new PasswordField();
+
+        Button registerButton = new Button("Registrarse");
+
+        registerButton.setOnAction(event -> {
+            String nombre = nameField.getText();
+            String email = emailField.getText();
+            String contraseÃ±a = passwordField.getText();
+
+            try {
+                FileWriter fileWriter = new FileWriter("registro.csv", true); // true para habilitar el modo de apendizado
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+                bufferedWriter.write(nombre + "," + email + "," + contraseÃ±a);
+                bufferedWriter.newLine();
+
+                bufferedWriter.close();
+                fileWriter.close();
+
+                System.out.println("Registro exitoso");
+
+                } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        Button backButton = new Button("Volver");
+        backButton.setOnAction(event -> {
+            // Falta evento para regresar
+            VBox mainMenuBox = createMainMenuInterface(primaryStage);
+            Scene mainMenuScene = new Scene(mainMenuBox, 400, 300);
+            primaryStage.setScene(mainMenuScene);
+        });
+
+        registerBox.getChildren().addAll(titleLabel, nameLabel, nameField, emailLabel, emailField, passwordLabel,
+                passwordField, registerButton, backButton);
+        return registerBox;
+    }
+
+    /**
+     * Punto de entrada del programa.
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    /**
+     * Crea la interfaz del juego.
+     */
+    private VBox createJuegoNivel1Interface(Stage primaryStage) {
+        VBox juegoNivel1Box = new VBox(10);
+        juegoNivel1Box.setAlignment(Pos.CENTER);
+
+        Label titleLabel = new Label("Nivel 1");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        // Cargar imÃ¡genes
+        Image playerImage = new Image("/jugador.jpg");
+        playerImageView = new ImageView(playerImage);
+
+        Image starImage = new Image("/estrella.jpg");
+        starImageView = new ImageView(starImage);
+
+        Image[] objectImages = new Image[4];
+        objectImageViews = new ImageView[4];
+        for (int i = 0; i < 4; i++) {
+            objectImages[i] = new Image("obj" + (i + 1) + ".jpg");
+            objectImageViews[i] = new ImageView(objectImages[i]);
+        }
+
+        // Posicionar elementos en el juego
+        BorderPane gamePane = new BorderPane();
+        gamePane.setCenter(playerImageView);
+        gamePane.setBottom(starImageView);
+        gamePane.setTop(titleLabel);
+        juegoNivel1Box.getChildren().add(gamePane);
+
+        // Iniciar movimiento de objetos
+        startObjectMovement();
+
+        // Detectar colisiones
+        gamePane.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
+
+        return juegoNivel1Box;
+    }
+
+    private void startObjectMovement() {
+        objectMovementTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> moveObjects())
+        );
+        objectMovementTimeline.setCycleCount(Timeline.INDEFINITE);
+        objectMovementTimeline.play();
+    }
+
+    private void moveObjects() {
+        for (ImageView objectImageView : objectImageViews) {
+            double deltaX = Math.random() * 10 - 5;
+            double deltaY = Math.random() * 10 - 5;
+
+            double newX = objectImageView.getX() + deltaX;
+            double newY = objectImageView.getY() + deltaY;
+
+            objectImageView.setX(newX);
+            objectImageView.setY(newY);
+
+            // Comprobar colisiÃ³n con el jugador
+            if (playerImageView.getBoundsInParent().intersects(objectImageView.getBoundsInParent())) {
+                lost = true;
+                objectMovementTimeline.stop();
+                showGameOverAlert();
+                break;
+            }
+
+            // Comprobar colisiÃ³n con la estrella
+            if (starImageView.getBoundsInParent().intersects(playerImageView.getBoundsInParent())) {
+                objectMovementTimeline.stop();
+                showLevelCompletedAlert();
+                break;
+            }
+        }
+    }
+
+    private void showGameOverAlert() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Â¡Perdiste!");
+        alert.setHeaderText(null);
+        alert.setContentText("Has sido alcanzado por un objeto. Â¡IntÃ©ntalo de nuevo!");
+
+        alert.showAndWait();
+    }
+
+    private void showLevelCompletedAlert() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Â¡Nivel completado!");
+        alert.setHeaderText(null);
+        alert.setContentText("Has llegado a la estrella. Â¡Avanza al siguiente nivel!");
+
+        alert.showAndWait();
+    }
+
+    private void handleKeyPress(KeyCode code) {
+        switch (code) {
+            case UP:
+                playerImageView.setY(playerImageView.getY() - 10);
+                break;
+            case DOWN:
+                playerImageView.setY(playerImageView.getY() + 10);
+                break;
+            case LEFT:
+                playerImageView.setX(playerImageView.getX() - 10);
+                break;
+            case RIGHT:
+                playerImageView.setX(playerImageView.getX() + 10);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void showGameInterface(Stage primaryStage, String username) {
+        Level level = levels[currentLevel];
+
+        Label usernameLabel = new Label("Jugador: " + username);
+        levelLabel = new Label("Nivel: " + (currentLevel + 1));
+        starLabel = new Label("Estrellas recolectadas: 0");
+
+        HBox infoBox = new HBox(20, usernameLabel, levelLabel, starLabel);
+        infoBox.setPadding(new Insets(20));
+        infoBox.setAlignment(Pos.CENTER);
+
+        playerCircle = new Circle(20, Color.BLUE);
+        starCircle = new Circle(10, Color.YELLOW);
+        objectCircles = new Circle[level.getObjectCount()];
+
+        Pane gamePane = new Pane(playerCircle, starCircle);
+        gamePane.getChildren().addAll(objectCircles);
+
+        BorderPane root = new BorderPane();
+        root.setTop(infoBox);
+        root.setCenter(gamePane);
+
+        Scene gameScene = new Scene(root, 600, 400);
+        primaryStage.setScene(gameScene);
+
+        setupGame(level);
+        startGame();
+    }
+
+    private void setupGame(Level level) {
+        playerCircle.setCenterX(level.getPlayerX());
+        playerCircle.setCenterY(level.getPlayerY());
+        starCircle.setCenterX(level.getStarX());
+        starCircle.setCenterY(level.getStarY());
+
+        DoubleBinding objectX = Bindings.createDoubleBinding(() -> playerCircle.getCenterX() - 50, playerCircle.centerXProperty());
+        DoubleBinding objectY = Bindings.createDoubleBinding(() -> playerCircle.getCenterY() - 50, playerCircle.centerYProperty());
+        for (int i = 0; i < level.getObjectCount(); i++) {
+            double x = level.getObjectX(i);
+            double y = level.getObjectY(i);
+            objectCircles[i] = new Circle(10, Color.RED);
+            objectCircles[i].setCenterX(x);
+            objectCircles[i].setCenterY(y);
+            objectX.add(x);
+            objectY.add(y);
+        }
+    }
+
+    private void startGame() {
+        objectMovementTimeline = new Timeline(new KeyFrame(Duration.millis(10), event -> {
+            for (int i = 0; i < levels[currentLevel].getObjectCount(); i++) {
+                double x = objectCircles[i].getCenterX();
+                double y = objectCircles[i].getCenterY();
+
+                if (y < 0) {
+                    y = 400;
+                    levels[currentLevel].setObjectY(i, y);
+                } else {
+                    y -= 1;
+                    levels[currentLevel].setObjectY(i, y);
+                }
+
+                objectCircles[i].setCenterY(y);
+
+                if (playerCircle.getBoundsInParent().intersects(objectCircles[i].getBoundsInParent())) {
+                    lost = true;
+                    objectMovementTimeline.stop();
+                    showGameOver();
+                }
+            }
+        }));
+
+        objectMovementTimeline.setCycleCount(Timeline.INDEFINITE);
+        objectMovementTimeline.play();
+    }
+
+    private void showGameOver() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Juego terminado");
+        alert.setHeaderText(null);
+        if (lost) {
+            alert.setContentText("Perdiste. Â¡IntÃ©ntalo de nuevo!");
+        } else {
+            alert.setContentText("Â¡Ganaste! Has completado todos los niveles.");
+        }
+        alert.setOnHidden(event -> {
+            if (lost) {
+                restartLevel();
+            } else {
+                resetGame();
+            }
+        });
+        alert.show();
+    }
+
+    private void restartLevel() {
+        lost = false;
+        setupGame(levels[currentLevel]);
+        startGame();
+    }
+
+    private void resetGame() {
+        currentLevel = 0;
+        lost = false;
+        VBox loginBox = createLoginInterface((Stage) levelLabel.getScene().getWindow());
+        Scene loginScene = new Scene(loginBox, 400, 300);
+        ((Stage) levelLabel.getScene().getWindow()).setScene(loginScene);
+    }
+
+    private Level[] createLevels() {
+        Level[] levels = new Level[3];
+
+        levels[0] = new Level(100, 300, 200, 100, 3);
+        levels[0].setObjectX(0, 150);
+        levels[0].setObjectY(0, 200);
+        levels[0].setObjectX(1, 250);
+        levels[0].setObjectY(1, 150);
+        levels[0].setObjectX(2, 350);
+        levels[0].setObjectY(2, 200);
+
+        levels[1] = new Level(400, 100, 500, 50, 5);
+        levels[1].setObjectX(0, 150);
+        levels[1].setObjectY(0, 300);
+        levels[1].setObjectX(1, 250);
+        levels[1].setObjectY(1, 350);
+        levels[1].setObjectX(2, 350);
+        levels[1].setObjectY(2, 300);
+        levels[1].setObjectX(3, 450);
+        levels[1].setObjectY(3, 350);
+        levels[1].setObjectX(4, 550);
+        levels[1].setObjectY(4, 300);
+
+        levels[2] = new Level(300, 200, 500, 100, 7);
+        levels[2].setObjectX(0, 100);
+        levels[2].setObjectY(0, 200);
+        levels[2].setObjectX(1, 200);
+        levels[2].setObjectY(1, 250);
+        levels[2].setObjectX(2, 300);
+        levels[2].setObjectY(2, 200);
+        levels[2].setObjectX(3, 400);
+        levels[2].setObjectY(3, 250);
+        levels[2].setObjectX(4, 500);
+        levels[2].setObjectY(4, 200);
+        levels[2].setObjectX(5, 600);
+        levels[2].setObjectY(5, 250);
+        levels[2].setObjectX(6, 700);
+        levels[2].setObjectY(6, 200);
+
+        return levels;
+    }
+
+    private static class Level {
+
+        private double playerX;
+        private double playerY;
+        private double starX;
+        private double starY;
+        private int objectCount;
+        private double[] objectX;
+        private double[] objectY;
+
+        public Level(double playerX, double playerY, double starX, double starY, int objectCount) {
+            this.playerX = playerX;
+            this.playerY = playerY;
+            this.starX = starX;
+            this.starY = starY;
+            this.objectCount = objectCount;
+            this.objectX = new double[objectCount];
+            this.objectY = new double[objectCount];
+        }
+
+        public double getPlayerX() {
+            return playerX;
+        }
+
+        public double getPlayerY() {
+            return playerY;
+        }
+
+        public double getStarX() {
+            return starX;
+        }
+
+        public double getStarY() {
+            return starY;
+        }
+
+        public int getObjectCount() {
+            return objectCount;
+        }
+
+        public double getObjectX(int index) {
+            return objectX[index];
+        }
+
+        public double getObjectY(int index) {
+            return objectY[index];
+        }
+
+        public void setObjectX(int index, double x) {
+            objectX[index] = x;
+        }
+
+        public void setObjectY(int index, double y) {
+            objectY[index] = y;
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+}
